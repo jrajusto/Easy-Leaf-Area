@@ -2,6 +2,7 @@ import os, sys
 import cv2
 from datetime import date
 import datetime
+import glob
 #from Tkinter import Frame, Tk, Label, Button, Scale, HORIZONTAL, Checkbutton, IntVar
 from tkinter import *
 #from tkFileDialog import *
@@ -30,6 +31,7 @@ global timeT
 
 def Show_pic(pic):
 	im = pic.copy()
+	im = im.resize((400,400), Image.LANCZOS)
 	im.thumbnail((800,800), Image.LANCZOS)
 	imtk=ImageTk.PhotoImage(im)
 	label = tk.Label(image=imtk, height =600, width = 800)
@@ -401,7 +403,7 @@ def run_LA():
 def S_dir():
 	global dirS
 	dirS = askdirectory()
-	Slabel.configure(text = dirS)
+	#Slabel.configure(text = dirS)
 def F_dir():
 	global dirF
 	dirF = askdirectory()
@@ -536,7 +538,7 @@ def show_Output():
 	global dirF
 	print (dirF)
 	print ("Opening output file in default application")
-	outputfile = 'start '+dirF+'/leafarea.csv'
+	outputfile = 'start '+dirF+f"/leafarea-{today}.csv"
 	os.system(outputfile)
 
 def save_Output(highlightfile, file, pixdata, pic, dirF):
@@ -546,7 +548,6 @@ def save_Output(highlightfile, file, pixdata, pic, dirF):
 	tifffile = file.replace('.jpg', '.tiff')
 	pic.save(dirF+'/highlight'+tifffile)
 def auto_Settings(WhatData):
-	global curFile
 	pic = Image.open(curFile)
 	speedP=8
 	xsize, ysize = pic.size
@@ -689,6 +690,7 @@ def testfunc():
 	global timeT
 	global today
 	global dirF
+	global dirS
 	global curFile
 	global takePic
 	while True:
@@ -699,8 +701,9 @@ def testfunc():
 				
 			except:
 				print("Folder already exists")
-		dirS = os.path.abspath(f"images/{str(today)}/")
+		dirS = os.path.abspath("dump")
 		dirF = "images/"+str(today)
+		dirFz = "dump/"
 
 		if not os.path.exists(dirF+f"/leafarea-{today}.csv"):
 			try:
@@ -724,13 +727,13 @@ def testfunc():
 		image = Image.fromarray(frame11)
 		
 		timeT = str(datetime.datetime.now().today()).replace(":"," ") + ".jpg"
-		image.save(f"images/{str(today)}/"+timeT)
+		image.save("dump/"+timeT)
 		#L1 = tk.Label(image=frame, height =600, width = 800)
 		#L1.image= frame
 		#L1.grid(row =5, rowspan=50, column =2)
 		#print('.')
 		#main.update()
-		
+		curFile = os.path.join(dirS, timeT)
 		curFile = os.path.join(dirS, timeT)
 		pic = Image.open(curFile)
 		file = os.path.basename(curFile)
@@ -740,7 +743,7 @@ def testfunc():
 			global ConsData
 			ConsData = [0,0,0,0,0]
 			auto_Settings(ConsData)
-		(gCnt, rCnt, pic, pixdata) = Pixel_check(curFile, dirF, file)
+		(gCnt, rCnt, pic, pixdata) = Pixel_check(curFile, dirFz, file)
 		if rCnt < 1:
 			rCnt+=1
 		leafarea = float(gCnt)/float(rCnt)*4.0
@@ -758,12 +761,13 @@ def testfunc():
 		Pixlabel.grid(row =2, column =2)
 		
 		highlightfile = dirF+f"/leafarea-{today}.csv"
-		os.remove(f"images/{str(today)}/"+timeT)
+		os.remove("dump/"+timeT)
 		if takePic:
 			save_Output(highlightfile, file, pixdata, pic, dirF)
 			takePic = False
 		print ("Finished processing images")
-		time.sleep(0.5)
+		#time.sleep(0.1)
+
 
 #load calib file on first run
 #mgset, bgset, mgrset, bgrset, mgbset, bgbset = load_calib()
@@ -775,42 +779,48 @@ main = Tk()
 
 main.title("Easy Leaf Area")
 
+main.attributes('-fullscreen',True)
+
+#change scaling ratio
+main.tk.call('tk','scaling',1)
+
+
 Frame1 = Frame(main)
 Frame1.grid (row= 1, column = 1, rowspan = 17)
 
 
-runsingbut = Button(Frame1, text ="Analyze with current settings", command = test_LA)
+#runsingbut = Button(Frame1, text ="Analyze with current settings", command = test_LA)
 
-saveresults = Button(Frame1, text ="Save analysis", command = single_LA)
+#saveresults = Button(Frame1, text ="Save analysis", command = single_LA)
 
 SObut = Button(main, text ="Open output csv file", command = show_Output)
 
-singbut = Button(Frame1, text = "Open an image", command = chos_file)
+#singbut = Button(Frame1, text = "Open an image", command = chos_file)
 singlabel = Label(Frame1)
 ###############################
-loadcalibbut= Button(Frame1, text = "Load calib File", command = calib_set)
+#loadcalibbut= Button(Frame1, text = "Load calib File", command = calib_set)
 
 ###############################
-Batchlabel = Label(Frame1)
-Batchlabel.configure (text ="Batch Processing:")
+#Batchlabel = Label(Frame1)
+#Batchlabel.configure (text ="Batch Processing:")
 
 dirS ="C:/"
-Sbut = Button(Frame1, text = "Select batch source Folder", command = S_dir)
-Slabel = Label(Frame1)
-Slabel.configure (text ="C:/")
+#Sbut = Button(Frame1, text = "Select batch source Folder", command = S_dir)
+#Slabel = Label(Frame1)
+#Slabel.configure (text ="C:/")
 
 dirF ="C:/"
-Fbut = Button(Frame1, text = "Select batch output Folder", command = F_dir)
-Flabel = Label(Frame1)
-Flabel.configure (text ="C:/")
+#Fbut = Button(Frame1, text = "Select batch output Folder", command = F_dir)
+#Flabel = Label(Frame1)
+#Flabel.configure (text ="C:/")
 
-CSbut = Button(Frame1, text ="Start Batch with current settings", command = check_Sett)
+#CSbut = Button(Frame1, text ="Start Batch with current settings", command = check_Sett)
 
 
 Frame3 = Frame(main)
 Frame3.grid (row= 1, column = 3, rowspan = 10)
 ##################
-addTocalibbut = Button (Frame1,text = "Add to calib File", command =addTocalib)
+#addTocalibbut = Button (Frame1,text = "Add to calib File", command =addTocalib)
 ###############
 
 minG =100
@@ -867,29 +877,29 @@ C6 = Checkbutton(main, text = "Only one Leaf component", variable = ThereCanBeOn
 ThereCanBeOnlyOne.get()
 ######################
 
-autosetbut = Button(Frame1, text ="Auto settings", command = auto_Sing)
+#autosetbut = Button(Frame1, text ="Auto settings", command = auto_Sing)
 
 autocheck = IntVar()
 C4 = Checkbutton(Frame1, text = "Use auto settings", variable = autocheck)
 autocheck.get()
 
-singbut.grid(row=1, column =1, pady=5)
-autosetbut.grid(row=2, column =1, pady=5)
-runsingbut.grid(row=3, column =1, pady=5)
-saveresults.grid(row=4, column =1, pady=5)
+#singbut.grid(row=1, column =1, pady=5)
+#autosetbut.grid(row=2, column =1, pady=5)
+#runsingbut.grid(row=3, column =1, pady=5)
+#saveresults.grid(row=4, column =1, pady=5)
 C1.grid(row=5, column =1, pady=5)
 C2.grid(row = 6, column =1, pady=5)
 C3.grid(row=7, column = 1, pady=5)
-Batchlabel.grid(row=9, column=1, pady=10)
-Sbut.grid(row=10, column=1, pady=5)
-Slabel.grid(row=11, column=1, pady=5)
-Fbut.grid(row=12, column=1, pady=5)
-Flabel.grid(row=13, column=1, pady=5)
-CSbut.grid(row=14, column=1, pady=5)
+#Batchlabel.grid(row=9, column=1, pady=10)
+#Sbut.grid(row=10, column=1, pady=5)
+#Slabel.grid(row=11, column=1, pady=5)
+#Fbut.grid(row=12, column=1, pady=5)
+#Flabel.grid(row=13, column=1, pady=5)
+#CSbut.grid(row=14, column=1, pady=5)
 C4.grid(row=15, column = 1, pady=5)
 ###############
-loadcalibbut.grid(row=16, column = 1, pady=5)
-addTocalibbut.grid(row=17, column =1, pady=5)
+#loadcalibbut.grid(row=16, column = 1, pady=5)
+#addTocalibbut.grid(row=17, column =1, pady=5)
 C6.grid(row=15, column = 3, pady=5)
 ##############
 minGscale.grid(row=1, column =3)

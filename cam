@@ -1,0 +1,19 @@
+import cv2
+import numpy as np
+from tkinter import *
+from PIL import Image, ImageTk
+
+root = Tk()
+root.configure(bg="black")
+Label(root,text = "CAM #1",font = ("times new roman",30,"bold"),bg="black",fg="red").pack()
+L1 = Label(root,bg="red")
+L1.pack()
+cap = cv2.VideoCapture(0)
+
+
+while True:
+    img = cap.read()[1]
+    img1 = cv2.cvtColor(img,cv2.COLOR_BGR2RGB)
+    #img = ImageTk.PhotoImage(Image.fromarray(img1))
+    L1['image'] = img
+    root.update()

@@ -1,11 +1,13 @@
 import os, sys
-
-
+import cv2
+from datetime import date
+import datetime
 #from Tkinter import Frame, Tk, Label, Button, Scale, HORIZONTAL, Checkbutton, IntVar
 from tkinter import *
 #from tkFileDialog import *
 from tkinter import filedialog
-from tkinter.filedialog import askopenfilename
+from tkinter.filedialog import askopenfilename, askdirectory
+
 from PIL import Image, ImageStat, ImageDraw, ImageFont, TiffImagePlugin, ImageTk
 
 import tkinter as tk
@@ -15,16 +17,25 @@ import scipy
 #import pylab
 from scipy import polyval, polyfit, ndimage
 from pylab import polyfit, polyval
-
+import time
 import numpy as np
+import threading
+cap = cv2.VideoCapture(0)
+
+global ret
+global frame
+global frame11
+global timeT
+
+
 def Show_pic(pic):
 	im = pic.copy()
-	im.thumbnail((800,800), Image.ANTIALIAS)
+	im.thumbnail((800,800), Image.LANCZOS)
 	imtk=ImageTk.PhotoImage(im)
 	label = tk.Label(image=imtk, height =600, width = 800)
 #	label = Label(image=imtk, height =600, width = 800)
 	label.image= imtk
-	label.grid(row =5, rowspan=50, column =2)
+	label.grid(row =6, rowspan=50, column =2)
 	main.update()
 
 def Pixel_check(curFile, dirF, file):
@@ -267,7 +278,6 @@ def test_LA():
 	Pixlabel.grid(row =2, column =2)
 
 	print ("Finished processing image")
-
 def addTocalib():
 	global ConsData
 	ConsData = [0,0,0,0,0]
@@ -318,7 +328,6 @@ def single_LA():
 	speedP=speedPscale.get()
 	xsize=xsize/speedP
 	ysize=ysize/speedP
-	filelabel.configure (text = file+" "+str(xsize)+ "x"+str(ysize))
 	filelabel.grid (row =1, column =2)
 	Pixlabel = Label(main, height = 1, width = 60)
 	Pixlabel.configure (text = "Leaf pixels: "+ str(gCnt)+ "   Scale pixels: "+ str(rCnt)+ "    Leaf area: "+ '%.2f' % leafarea+ "cm^2")
@@ -537,8 +546,8 @@ def save_Output(highlightfile, file, pixdata, pic, dirF):
 	tifffile = file.replace('.jpg', '.tiff')
 	pic.save(dirF+'/highlight'+tifffile)
 def auto_Settings(WhatData):
-	global chosfile
-	pic = Image.open(chosfile)
+	global curFile
+	pic = Image.open(curFile)
 	speedP=8
 	xsize, ysize = pic.size
 	xsize=xsize/speedP
@@ -662,6 +671,99 @@ def auto_Sing():
 def calib_set():
 	global mgset, bgset, mgrset, bgrset, mgbset, bgbset, mmrset, bmrset, mmrgset, bmrgset
 	mgset, bgset, mgrset, bgrset, mgbset, bgbset, mmrset, bmrset, mmrgset, bmrgset = chos_calib()
+# def initToday():
+# 	global timeT
+# 	timeT = ""
+
+def capture():
+	global takePic
+	takePic = True
+def on_closing():
+	try:
+		os.remove(f"images/{str(today)}/"+timeT)
+	except:
+		print("Already deleted")
+
+def testfunc():
+	
+	global timeT
+	global today
+	global dirF
+	global curFile
+	global takePic
+	while True:
+		if (today != date.today()):
+			today = date.today()
+			try:
+				os.mkdir("images/"+str(today))
+				
+			except:
+				print("Folder already exists")
+		dirS = os.path.abspath(f"images/{str(today)}/")
+		dirF = "images/"+str(today)
+
+		if not os.path.exists(dirF+f"/leafarea-{today}.csv"):
+			try:
+				with open(dirF+f"/leafarea-{today}.csv", "a") as f:
+					f.write("filename,total green pixels,red pixels (4 cm^2),leaf area cm^2, Component green pixels:")
+					f.write("\n")
+			except:
+				open (dirF+f"/leafarea-{today}.csv", "w")
+				with open(dirF+'/leafarea.csv', "a") as f:
+					f.write("filename,total green pixels,red pixels (4 cm^2),leaf area cm^2, Component green pixels:")
+					f.write("\n")
+		
+
+			
+			
+
+		frame = cap.read()[1]
+		frame11 = cv2.cvtColor(frame,cv2.COLOR_BGR2RGB)
+		frame = ImageTk.PhotoImage(Image.fromarray(frame11))
+		
+		image = Image.fromarray(frame11)
+		
+		timeT = str(datetime.datetime.now().today()).replace(":"," ") + ".jpg"
+		image.save(f"images/{str(today)}/"+timeT)
+		#L1 = tk.Label(image=frame, height =600, width = 800)
+		#L1.image= frame
+		#L1.grid(row =5, rowspan=50, column =2)
+		#print('.')
+		#main.update()
+		
+		curFile = os.path.join(dirS, timeT)
+		pic = Image.open(curFile)
+		file = os.path.basename(curFile)
+		xsize, ysize = pic.size
+
+		if (autocheck.get()):
+			global ConsData
+			ConsData = [0,0,0,0,0]
+			auto_Settings(ConsData)
+		(gCnt, rCnt, pic, pixdata) = Pixel_check(curFile, dirF, file)
+		if rCnt < 1:
+			rCnt+=1
+		leafarea = float(gCnt)/float(rCnt)*4.0
+		if rCnt <2:
+			rCnt = 0
+
+		filelabel= Label (main, height =1, width=60)
+		speedP=speedPscale.get()
+		xsize=xsize/speedP
+		ysize=ysize/speedP
+		filelabel.configure (text = file+" "+str(xsize)+ "x"+str(ysize))
+		filelabel.grid (row =1, column =2)
+		Pixlabel = Label(main, height = 1, width = 60)
+		Pixlabel.configure (text = "Leaf pixels: "+ str(gCnt)+ "   Scale pixels: "+ str(rCnt)+ "    Leaf area: "+ '%.2f' % leafarea+ "cm^2")
+		Pixlabel.grid(row =2, column =2)
+		
+		highlightfile = dirF+f"/leafarea-{today}.csv"
+		os.remove(f"images/{str(today)}/"+timeT)
+		if takePic:
+			save_Output(highlightfile, file, pixdata, pic, dirF)
+			takePic = False
+		print ("Finished processing images")
+		time.sleep(0.5)
 
 #load calib file on first run
 #mgset, bgset, mgrset, bgrset, mgbset, bgbset = load_calib()
@@ -670,6 +772,7 @@ def calib_set():
 mgset, bgset, mgrset, bgrset, mgbset, bgbset, mmrset, bmrset, mmrgset, bmrgset = load_calib()
 
 main = Tk()
+
 main.title("Easy Leaf Area")
 
 Frame1 = Frame(main)
@@ -805,4 +908,16 @@ filelabel.configure (text = " ")
 filelabel.grid (row =1, column =2)
 SObut.grid(row=3, column =2)
 C5.grid(row=4, column = 2)
+global today
+today = ""
+cap = cv2.VideoCapture(0)	
+#main.mainloop()
+#initToday()
+global takePic
+takePic = False
+picButton=Button(main, text = "Capture image", command = capture)
+picButton.grid(row =5, column =2)
+threading.Thread(target=testfunc).start()
 main.mainloop()
+
+

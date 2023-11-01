@@ -27,10 +27,10 @@ def Pixel_check(curFile, dirF, file):
 	pic2= Image.open(curFile)
 	picr= Image.open(curFile)
 	if (rotPic.get()):
-		print "Rotating picture 180"
+		print("Rotating picture 180")
 		pic = pic.rotate(180)
 	if (flipPic.get()):	
-		print "Flipping picture"
+		print("Flipping picture")
 		pic = pic.transpose(Image.FLIP_LEFT_RIGHT)
 	imgdata = pic.load()
 	print file," loaded"

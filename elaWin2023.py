@@ -407,7 +407,7 @@ def S_dir():
 def F_dir():
 	global dirF
 	dirF = askdirectory()
-	Flabel.configure(text = dirF)
+	#Flabel.configure(text = dirF)
 def check_Sett():
 	print ("Batch processing")
 	run_LA()

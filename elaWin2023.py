@@ -21,7 +21,7 @@ from pylab import polyfit, polyval
 import time
 import numpy as np
 import threading
-cap = cv2.VideoCapture(0)
+#cap = cv2.VideoCapture(0)
 
 global ret
 global frame
@@ -686,86 +686,86 @@ def on_closing():
 		print("Already deleted")
 
 def testfunc():
-	
-	global timeT
-	global today
-	global dirF
-	global dirS
-	global curFile
-	global takePic
-	while True:
-		if (today != date.today()):
-			today = date.today()
-			try:
-				os.mkdir("images/"+str(today))
+		
+		global timeT
+		global today
+		global dirF
+		global dirS
+		global curFile
+		global takePic
+		while True:
+			if (today != date.today()):
+				today = date.today()
+				try:
+					os.mkdir("images/"+str(today))
+					
+				except:
+					print("Folder already exists")
+			dirS = os.path.abspath("dump")
+			dirF = "images/"+str(today)
+			dirFz = "dump/"
+
+			if not os.path.exists(dirF+f"/leafarea-{today}.csv"):
+				try:
+					with open(dirF+f"/leafarea-{today}.csv", "a") as f:
+						f.write("filename,total green pixels,red pixels (4 cm^2),leaf area cm^2, Component green pixels:")
+						f.write("\n")
+				except:
+					open (dirF+f"/leafarea-{today}.csv", "w")
+					with open(dirF+'/leafarea.csv', "a") as f:
+						f.write("filename,total green pixels,red pixels (4 cm^2),leaf area cm^2, Component green pixels:")
+						f.write("\n")
+			
+
 				
-			except:
-				print("Folder already exists")
-		dirS = os.path.abspath("dump")
-		dirF = "images/"+str(today)
-		dirFz = "dump/"
+				
 
-		if not os.path.exists(dirF+f"/leafarea-{today}.csv"):
-			try:
-				with open(dirF+f"/leafarea-{today}.csv", "a") as f:
-					f.write("filename,total green pixels,red pixels (4 cm^2),leaf area cm^2, Component green pixels:")
-					f.write("\n")
-			except:
-				open (dirF+f"/leafarea-{today}.csv", "w")
-				with open(dirF+'/leafarea.csv', "a") as f:
-					f.write("filename,total green pixels,red pixels (4 cm^2),leaf area cm^2, Component green pixels:")
-					f.write("\n")
-		
-
+			frame = cap.read()[1]
+			frame11 = cv2.cvtColor(frame,cv2.COLOR_BGR2RGB)
+			frame = ImageTk.PhotoImage(Image.fromarray(frame11))
 			
+			image = Image.fromarray(frame11)
 			
+			timeT = str(datetime.datetime.now().today()).replace(":"," ") + ".jpg"
+			image.save("dump/"+timeT)
+			#L1 = tk.Label(image=frame, height =600, width = 800)
+			#L1.image= frame
+			#L1.grid(row =5, rowspan=50, column =2)
+			#print('.')
+			#main.update()
+			curFile = os.path.join(dirS, timeT)
+			curFile = os.path.join(dirS, timeT)
+			pic = Image.open(curFile)
+			file = os.path.basename(curFile)
+			xsize, ysize = pic.size
 
-		frame = cap.read()[1]
-		frame11 = cv2.cvtColor(frame,cv2.COLOR_BGR2RGB)
-		frame = ImageTk.PhotoImage(Image.fromarray(frame11))
-		
-		image = Image.fromarray(frame11)
-		
-		timeT = str(datetime.datetime.now().today()).replace(":"," ") + ".jpg"
-		image.save("dump/"+timeT)
-		#L1 = tk.Label(image=frame, height =600, width = 800)
-		#L1.image= frame
-		#L1.grid(row =5, rowspan=50, column =2)
-		#print('.')
-		#main.update()
-		curFile = os.path.join(dirS, timeT)
-		curFile = os.path.join(dirS, timeT)
-		pic = Image.open(curFile)
-		file = os.path.basename(curFile)
-		xsize, ysize = pic.size
+			if (autocheck.get()):
+				global ConsData
+				ConsData = [0,0,0,0,0]
+				auto_Settings(ConsData)
+			(gCnt, rCnt, pic, pixdata) = Pixel_check(curFile, dirFz, file)
+			if rCnt < 1:
+				rCnt+=1
+			leafarea = float(gCnt)/float(rCnt)*4.0
+			if rCnt <2:
+				rCnt = 0
 
-		if (autocheck.get()):
-			global ConsData
-			ConsData = [0,0,0,0,0]
-			auto_Settings(ConsData)
-		(gCnt, rCnt, pic, pixdata) = Pixel_check(curFile, dirFz, file)
-		if rCnt < 1:
-			rCnt+=1
-		leafarea = float(gCnt)/float(rCnt)*4.0
-		if rCnt <2:
-			rCnt = 0
-
-		filelabel= Label (main, height =1, width=60)
-		speedP=speedPscale.get()
-		xsize=xsize/speedP
-		ysize=ysize/speedP
-		filelabel.configure (text = file+" "+str(xsize)+ "x"+str(ysize))
-		filelabel.grid (row =1, column =2)
-		Pixlabel = Label(main, height = 1, width = 60)
-		Pixlabel.configure (text = "Leaf pixels: "+ str(gCnt)+ "   Scale pixels: "+ str(rCnt)+ "    Leaf area: "+ '%.2f' % leafarea+ "cm^2")
-		Pixlabel.grid(row =2, column =2)
-		
-		highlightfile = dirF+f"/leafarea-{today}.csv"
-		os.remove("dump/"+timeT)
-		if takePic:
-			save_Output(highlightfile, file, pixdata, pic, dirF)
-			takePic = False
-		print ("Finished processing images")
+			filelabel= Label (main, height =1, width=60)
+			speedP=speedPscale.get()
+			xsize=xsize/speedP
+			ysize=ysize/speedP
+			filelabel.configure (text = file+" "+str(xsize)+ "x"+str(ysize))
+			filelabel.grid (row =1, column =2)
+			Pixlabel = Label(main, height = 1, width = 60)
+			Pixlabel.configure (text = "Leaf pixels: "+ str(gCnt)+ "   Scale pixels: "+ str(rCnt)+ "    Leaf area: "+ '%.2f' % leafarea+ "cm^2")
+			Pixlabel.grid(row =2, column =2)
+			
+			highlightfile = dirF+f"/leafarea-{today}.csv"
+			os.remove("dump/"+timeT)
+			if takePic:
+				save_Output(highlightfile, file, pixdata, pic, dirF)
+				takePic = False
+			print ("Finished processing images")
 		#time.sleep(0.1)
 
 

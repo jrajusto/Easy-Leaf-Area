@@ -920,7 +920,7 @@ SObut.grid(row=3, column =2)
 C5.grid(row=4, column = 2)
 global today
 today = ""
-cap = cv2.VideoCapture(0)	
+cap = cv2.VideoCapture(1)	
 #main.mainloop()
 #initToday()
 global takePic

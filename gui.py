@@ -23,6 +23,7 @@ import numpy as np
 import threading
 
 
+
 def load_calib():
 	try:
 		with open(os.path.join(sys.path[0], "calib.csv")) as csvfile:
@@ -268,7 +269,7 @@ def Show_pic(pic):
 	global imtk
 	
 	im = pic.copy()
-	im = im.resize((400,400), Image.LANCZOS)
+	im = im.resize((image_size,image_size), Image.LANCZOS)
 	im.thumbnail((800,800), Image.LANCZOS)
 	imtk=ImageTk.PhotoImage(im)
 	L1['image'] = imtk
@@ -614,7 +615,9 @@ root.title("Easy Leaf Area")
 root.attributes('-fullscreen',True)
 
 #change scaling ratio
-root.tk.call('tk','scaling',1)
+root.tk.call('tk','scaling',0.7)
+#change image size
+image_size = 200
 
 processELAdone = False
 cap = cv2.VideoCapture(1)
@@ -636,30 +639,43 @@ frame1.pack()
 
 
 retakeButton = Button(frame1,text="Retake",height=2,width=15,command=retake)
-retakeButton.grid(row=0,column=0,sticky=W,padx=100) 
+retakeButton.grid(row=0,column=0,sticky=W) 
 
 captureButton = Button(frame1,text="Capture",height=2,width=15,command=takePic)
-captureButton.grid(row=0,column=1,padx=100) 
+captureButton.grid(row=0,column=1) 
 
 nextButton = Button(frame1,text="Next",height=2,width=15,command=secondStep)
-nextButton.grid(row=0,column=2,sticky=E,padx=100)
+nextButton.grid(row=0,column=2,sticky=E)
 
 frame2 = LabelFrame(f1)
 
 backButton = Button(frame2,text="Back",height=2,width=15,command=backToFirst)
-backButton.grid(row=0,column=0,sticky=W,padx=30) 
+backButton.grid(row=0,column=0,sticky=W) 
 
 calibrateButton = Button(frame2,text="Calibrate",height=2,width=15,command=showCalibraiton)
-calibrateButton.grid(row=0,column=1,padx=30) 
+calibrateButton.grid(row=0,column=1) 
 
 processButton = Button(frame2,text="Process",height=2,width=15,command=processELA)
-processButton.grid(row=0,column=2,sticky=E,padx=30)
+processButton.grid(row=0,column=2,sticky=E)
 
 next2Button = Button(frame2,text="Next",height=2,width=15,command=saveStep)
-next2Button.grid(row=0,column=3,sticky=E,padx=30)
+next2Button.grid(row=0,column=3,sticky=E)
 
 frame3 = LabelFrame(picFrame)
+
+canvas = Canvas(frame3)
+canvas.pack(side = LEFT,fill=BOTH,expand=1)
+
+scrollbar = Scrollbar(frame3,orient=VERTICAL,command = canvas.yview)
+scrollbar.pack(side=RIGHT,fill=Y)
 #frame3.grid(column=2,row=0)
+
+canvas.configure(yscrollcommand=scrollbar.set)
+canvas.bind('<Configure>',lambda e:canvas.configure(scrollregion=canvas.bbox("all")))
+
+frame3p1 = Frame(canvas)
+
+canvas.create_window((0,0),window=frame3p1,anchor="nw")
 
 frame4 = LabelFrame(picFrame)
 
@@ -667,13 +683,13 @@ frame4 = LabelFrame(picFrame)
 frame5 = LabelFrame(f1)
 
 backButton2 = Button(frame5,text="Back",height=2,width=15,command=backToSecond)
-backButton2.grid(row=0,column=0,sticky=W,padx=30) 
+backButton2.grid(row=0,column=0,sticky=W) 
 
 saveButton = Button(frame5,text="Save",height=2,width=15,command=save_Output)
-saveButton.grid(row=0,column=1,padx=30) 
+saveButton.grid(row=0,column=1) 
 
 homeButton = Button(frame5,text="Home",height=2,width=15,command=backToFirst)
-homeButton.grid(row=0,column=2,sticky=E,padx=30)
+homeButton.grid(row=0,column=2,sticky=E)
 
 
 autocheck = IntVar()
@@ -716,45 +732,45 @@ ThereCanBeOnlyOne.get()
 
 
 minG =100
-minGscale = Scale(frame3, from_=0, to=255, label="Leaf minimum Green RGB value:", orient=HORIZONTAL, tickinterval = 50, length = 250, variable = minG )
+minGscale = Scale(frame3p1, from_=0, to=255, label="Leaf minimum Green RGB value:", orient=HORIZONTAL, tickinterval = 50, length = 100, variable = minG )
 minGscale.set(25)
 minGscale.pack()
 
 
 ratG =1.2
-ratGscale = Scale(frame3, from_=0.9, to=2, resolution = 0.02, label="Leaf Green Ratio: (G/R)", orient=HORIZONTAL, tickinterval = 0.5, length = 200, variable = ratG )
+ratGscale = Scale(frame3p1, from_=0.9, to=2, resolution = 0.02, label="Leaf Green Ratio: (G/R)", orient=HORIZONTAL, tickinterval = 0.5, length = 100, variable = ratG )
 ratGscale.set(1.05)
 ratGscale.pack()
 
 
 ratGb =1.35
-ratGbscale = Scale(frame3, from_=0.8, to=2, resolution = 0.02, label="Leaf Green Ratio: (G/B)", orient=HORIZONTAL, tickinterval = 0.5, length = 200, variable = ratGb )
+ratGbscale = Scale(frame3p1, from_=0.8, to=2, resolution = 0.02, label="Leaf Green Ratio: (G/B)", orient=HORIZONTAL, tickinterval = 0.5, length = 100, variable = ratGb )
 ratGbscale.set(1.07)
 ratGbscale.pack()
 
 minR =200
-minRscale = Scale(frame3, from_=0, to=255, label="Scale minimum Red RGB value:", orient=HORIZONTAL, tickinterval = 50, length = 250, variable = minR )
+minRscale = Scale(frame3p1, from_=0, to=255, label="Scale minimum Red RGB value:", orient=HORIZONTAL, tickinterval = 50, length = 100, variable = minR )
 minRscale.set(225)
 minRscale.pack()
 
 ratR =1.3
-ratRscale = Scale(frame3, from_=1, to=2, resolution = 0.02, label="Scale Red Ratio: (R/G & R/B)", orient=HORIZONTAL, tickinterval = 0.5, length = 200, variable = ratR )
+ratRscale = Scale(frame3p1, from_=1, to=2, resolution = 0.02, label="Scale Red Ratio: (R/G & R/B)", orient=HORIZONTAL, tickinterval = 0.5, length = 100, variable = ratR )
 ratRscale.set(1.95)
 ratRscale.pack()
 
 speedP =1
-speedPscale = Scale(frame3, from_=1, to=8, resolution = 1, label="Processing Speed:", orient=HORIZONTAL, tickinterval = 1, length = 200, variable = speedP )
+speedPscale = Scale(frame3p1, from_=1, to=8, resolution = 1, label="Processing Speed:", orient=HORIZONTAL, tickinterval = 1, length = 100, variable = speedP )
 speedPscale.set(4)
 speedPscale.pack()
 
 
 minPsize =500
-minPscale = Scale(frame3, from_=1, to=5000, resolution = 10, label="Minimum Leaf Size (pixels):", orient=HORIZONTAL, tickinterval = 1000, length = 250, variable = minPsize )
+minPscale = Scale(frame3p1, from_=1, to=5000, resolution = 10, label="Minimum Leaf Size (pixels):", orient=HORIZONTAL, tickinterval = 1000, length = 100, variable = minPsize )
 minPscale.pack()
 minPscale.set(0)
 
 Scalesize =4.1
-SSscale = Scale(frame3, from_=0, to=20, resolution = 0.1, label="Scale area (cm^2):", orient=HORIZONTAL, tickinterval = 4, length = 250, variable = Scalesize )
+SSscale = Scale(frame3p1, from_=0, to=20, resolution = 0.1, label="Scale area (cm^2):", orient=HORIZONTAL, tickinterval = 4, length = 100, variable = Scalesize )
 SSscale.pack()
 SSscale.set(4)
 calibrate = False
@@ -765,7 +781,9 @@ while True:
 		img = cap.read()[1]
 		img2 = cv2.cvtColor(img,cv2.COLOR_BGR2RGB)
 		img = ImageTk.PhotoImage(Image.fromarray(img2))
-		L1['image'] = img 
+		img3 = cv2.resize(img2, (image_size,image_size), interpolation = cv2.INTER_AREA)
+		img3 = ImageTk.PhotoImage(Image.fromarray(img3))
+		L1['image'] = img3 
 	elif imtkexists:
 		L1['image'] = imtk
 	
